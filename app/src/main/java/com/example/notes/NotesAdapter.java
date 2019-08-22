@@ -13,9 +13,22 @@ import java.util.ArrayList;
 public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NotesViewHolder>{
 
     private ArrayList<Note> notes;
+    //Когда будут объявлять интерфейс этому полю присвоится значение
+    private OnNoteClickListener onNoteClickListener;
 
+    //Конструктор который принимает список заметок
     public NotesAdapter(ArrayList<Note> notes) {
         this.notes = notes;
+    }
+
+    //Создаем интерфейс слушателя событий
+    public interface OnNoteClickListener{
+        void onNoteClick(int position); //Будет принимать номер позиции на которую мы нажали
+        void onLongClick(int position); //Долгое нажатие на позицию
+    }
+
+    public void setOnNoteClickListener(NotesAdapter.OnNoteClickListener onNoteClickListener) {
+        this.onNoteClickListener = onNoteClickListener;
     }
 
     @NonNull
@@ -68,6 +81,27 @@ public class NotesAdapter extends RecyclerView.Adapter<NotesAdapter.NotesViewHol
             textViewTitle = itemView.findViewById(R.id.textViewTitle);
             textViewDescription = itemView.findViewById(R.id.textViewDescription);
             textViewDayOfWeek = itemView.findViewById(R.id.textViewDayOfWeek);
+            //Установка слушателей событий..
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    //Проверяем установлен ли слушатель для заметок
+                    if(onNoteClickListener != null){
+                        onNoteClickListener.onNoteClick(getAdapterPosition());
+                    }
+                }
+            });
+            //Установка слушателей событий..
+            itemView.setOnLongClickListener(new View.OnLongClickListener() {
+                @Override
+                public boolean onLongClick(View view) {
+                    if (onNoteClickListener != null){
+                        onNoteClickListener.onLongClick(getAdapterPosition());
+                    }
+                    return true; //Если будет false, то сначало выполнится onClick
+                }
+            });
+
         }
     }
 }

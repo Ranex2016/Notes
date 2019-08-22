@@ -29,6 +29,6 @@
         android:onClick="onClickAddNote"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@drawable/plus" />
+        app:srcCompat="@drawable/plus3" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

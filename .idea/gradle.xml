@@ -8,8 +8,9 @@
         </compositeConfiguration>
         <option name="distributionType" value="LOCAL" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="gradleHome" value="$PROJECT_DIR$/../../Android/gradle/gradle-5.4.1" />
+        <option name="gradleHome" value="$PROJECT_DIR$/../../Android/gradle/gradle-5.6" />
         <option name="resolveModulePerSourceSet" value="false" />
+        <option name="testRunner" value="PLATFORM" />
       </GradleProjectSettings>
     </option>
   </component>
