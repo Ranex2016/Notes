@@ -11,7 +11,7 @@ import androidx.annotation.Nullable;
 public class NotesDBHelper extends SQLiteOpenHelper {
     //Создаем поля с именем базы данных и версией
     public static final String DB_NAME = "notes.db";
-    public static final int DB_VERSION = 1;
+    public static final int DB_VERSION = 3;
 
     //В конструктор будем передавать только Context, по этому остальные поля удаляем..
     public NotesDBHelper(@Nullable Context context) {

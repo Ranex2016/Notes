@@ -1,6 +1,7 @@
 package com.example.notes;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.ItemTouchHelper;
@@ -19,65 +20,35 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerViewNotes;
-    public static final ArrayList<Note> notes = new ArrayList<>();
+    private final ArrayList<Note> notes = new ArrayList<>();
     private NotesAdapter adapter;
     //Создаем помошник для работы с базой данных
     private NotesDBHelper dbHelper;
+    private SQLiteDatabase database;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        //Отключение ЭкшнБара
+        ActionBar actionBar =getSupportActionBar();
+        if(actionBar != null){
+            actionBar.hide();
+        }
+
         //Присваеваем значения
         dbHelper = new NotesDBHelper(this);
         //Создаем БД, получаем её из NotesDBHelper
-        SQLiteDatabase database = dbHelper.getWritableDatabase();
+        database = dbHelper.getWritableDatabase();
 
         recyclerViewNotes =findViewById(R.id.recycleViewNotes);
-//        if(notes.isEmpty()){
-//            notes.add(new Note("Парикхмахер","сделать пирческу","Понедельник",2));
-//            notes.add(new Note("Магазин","купить корм коту","Вторник",3));
-//            notes.add(new Note("Магазин","купить новые джинсы","Среда",1));
-//            notes.add(new Note("Диета","начать правильно питаться","Понедельник",3));
-//            notes.add(new Note("Программирование","сделать новую игру","Понедельник",2));
-//            notes.add(new Note("Больница","сдать анализы крови","Вторник",2));
-//            notes.add(new Note("Стоматолог","вылечить зуб","Среда",3));
-//            notes.add(new Note("Программирование","сделать новую игру","Понедельник",2));
-//            notes.add(new Note("Больница","сдать анализы крови","Вторник",2));
-//            notes.add(new Note("Стоматолог","вылечить зуб","Среда",3));
-//            notes.add(new Note("Магазин","купить корм коту","Вторник",3));
-//            notes.add(new Note("Магазин","купить новые джинсы","Среда",1));
-//        }
-//        //Перебор списка заметок и добавляем их в ContentValues а его уже в БД
-//        for (Note note: notes){
-//            ContentValues contentValues = new ContentValues();
-//            contentValues.put(NotesContract.NotesEntry.COLUMN_TITLE, note.getTitle());
-//            contentValues.put(NotesContract.NotesEntry.COLUMN_DESCRIPTION, note.getDescription());
-//            contentValues.put(NotesContract.NotesEntry.COLUMN_DAY_OF_WEEK, note.getDayOfWeek());
-//            contentValues.put(NotesContract.NotesEntry.COLUMN_PRIORITY, note.getPriority());
-//            database.insert(NotesContract.NotesEntry.TABLE_NAME, null, contentValues);
-//        }
 
-        //Проверяем что записи в БД добавленны
-        ArrayList<Note> notesFromDB = new ArrayList<>();
-        //Вытаскиваем ВСЕ данные из БД, передаем имя таблицы, а остальные значение null
-        Cursor cursor = database.query(NotesContract.NotesEntry.TABLE_NAME,null,null,null,null,null,null,null);
-        //Получение значений
-        while (cursor.moveToNext()){//Переводит курсор с значения -1 к позиции 0 и т.д.
-            String title = cursor.getString(cursor.getColumnIndex(NotesContract.NotesEntry.COLUMN_TITLE));
-            String description = cursor.getString(cursor.getColumnIndex(NotesContract.NotesEntry.COLUMN_DESCRIPTION));
-            String dayOfWeek = cursor.getString(cursor.getColumnIndex(NotesContract.NotesEntry.COLUMN_DAY_OF_WEEK));
-            int priority = cursor.getInt(cursor.getColumnIndex(NotesContract.NotesEntry.COLUMN_PRIORITY));
-
-            Note note = new Note(title,description,dayOfWeek,priority);
-            notesFromDB.add(note);
-
-        }
-        //Обязательно закрывать курсор
-        cursor.close();
+        //Вытаскиваем ВСЕ данные из БД
+        getData();
 
         //Объявляем адаптер заметок и передаём в него список заметок
-        adapter = new NotesAdapter(notesFromDB);
+        adapter = new NotesAdapter(notes);
         //Говорим как хотим видеть отображение заметок
         recyclerViewNotes.setLayoutManager(new LinearLayoutManager(this));
         //Установка адаптера для RecyclerView
@@ -116,8 +87,12 @@ public class MainActivity extends AppCompatActivity {
 
     //Метод удаления элементов по позиции
     private void remove(int position){
+        int id = notes.get(position).getId();
+        String where = NotesContract.NotesEntry._ID + " = ?";
+        String[] whereArgs = new String[]{Integer.toString(id)};
+        database.delete(NotesContract.NotesEntry.TABLE_NAME,where,whereArgs);
         //Удалим элемент из списка заметок
-        notes.remove(position);
+        getData();
         //Адаптер обрати внимание что данные изменились!
         adapter.notifyDataSetChanged();
     }
@@ -126,5 +101,25 @@ public class MainActivity extends AppCompatActivity {
     public void onClickAddNote(View view) {
         Intent intent = new Intent(this,AddNoteActivity.class);
         startActivity(intent);
+    }
+
+    private void getData(){
+        //Чистим массив от данных
+        notes.clear();
+        //Вытаскиваем ВСЕ данные из БД, передаем имя таблицы, а остальные значение null
+        Cursor cursor = database.query(NotesContract.NotesEntry.TABLE_NAME,null,null,null,null,null,NotesContract.NotesEntry.COLUMN_DAY_OF_WEEK,null);
+        //Получение значений
+        while (cursor.moveToNext()){//Переводит курсор с значения -1 к позиции 0 и т.д.
+            int id = cursor.getInt(cursor.getColumnIndex(NotesContract.NotesEntry._ID));
+            String title = cursor.getString(cursor.getColumnIndex(NotesContract.NotesEntry.COLUMN_TITLE));
+            String description = cursor.getString(cursor.getColumnIndex(NotesContract.NotesEntry.COLUMN_DESCRIPTION));
+            int dayOfWeek = cursor.getInt(cursor.getColumnIndex(NotesContract.NotesEntry.COLUMN_DAY_OF_WEEK));
+            int priority = cursor.getInt(cursor.getColumnIndex(NotesContract.NotesEntry.COLUMN_PRIORITY));
+
+            Note note = new Note(id,title,description,dayOfWeek,priority);
+            notes.add(note);
+        }
+        //Обязательно закрывать курсор
+        cursor.close();
     }
 }
